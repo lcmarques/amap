@@ -9,7 +9,7 @@
 --  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._ 
 -- (.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)
 --  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' 
--- AMAP - ASM Mapping Utility v0.2 
+-- AMAP - ASM Mapping Utility v0.3
 -- Author: Luis Marques (lcarapinha@gmail)
 -- Website: http://lcmarques.com
 -- Twitter: @drune
@@ -17,7 +17,8 @@
 
 -- USAGE: @amap list DGNAME
 --        @amap free DGNAME
--- 	  @amap ASMFILENAME
+-- 	      @amap ASMFILENAME
+--        @amap metadata DGNAME
 
 
 set serveroutput on format wrapped
@@ -36,9 +37,45 @@ begin
 getops := '&1';
 getops2 := '&2';
 
-if (getops = 'free') then
+if (getops = 'metadata') then
+
+DBMS_OUTPUT.put_line('DISKNUMBER FILENUMBER FILE EXTENT NUMBER          METADATA DESC         EXTENT MIRRORING RELATIVE AU POSITION');
+DBMS_OUTPUT.put_line('---------- ---------- ------------------ ------------------------------ ---------------- --------------------');
+	
+FOR asm_meta IN (
+select distinct 
+ff.DISK_KFFXP,
+ff.NUMBER_KFFXP,
+ff.XNUM_KFFXP,
+DECODE(ff.NUMBER_KFFXP, '1', 'FILE DIRECTORY',
+					  '2', 'DISK DIRECTORY',
+					  '3', 'ACTIVE CHG DIRECTORY (ACD)',
+					  '4', 'CONT OPERATION DIR (COD)',
+					  '5', 'TEMPLATE DIRECTORY',
+					  '6', 'ALIAS DIRECTORY',
+					  '9', 'ATTRIBUTE DIRECTORY',
+					  '12', 'STALENESS REGISTRY',
+					  'UNKNOW') META_DESC,
+DECODE(ff.LXN_KFFXP, '0', 'PRIMARY EXT', '1', '1st MIRROR EXT','2', '2nd MIRROR EXT') EXTP, 
+ff.AU_KFFXP
+from x$kffxp ff, x$kffil fi
+where ff.NUMBER_KFFXP = fi.number_kffil
+and ff.GROUP_KFFXP = fi.group_kffil
+and ff.GROUP_KFFXP = (select distinct group_number from V$ASM_DISKGROUP where name=getops2)
+and number_kffxp < 256
+)
+
+LOOP
+
+dbms_output.put_line(lpad(asm_meta.DISK_KFFXP, 10)  || ' ' ||  rpad(asm_meta.NUMBER_KFFXP,10) || ' ' || rpad(asm_meta.XNUM_KFFXP,18) || ' ' || rpad(asm_meta.META_DESC,30) || ' ' || rpad(asm_meta.extp,16) || ' ' || rpad(asm_meta.au_kffxp,20));
+
+
+END LOOP;
+
+
+elsif (getops = 'free') then
 	 
-          DBMS_OUTPUT.put_line('     DISKGROUP       DISKNUMBER AU STATUS   AU COUNT  ');
+      DBMS_OUTPUT.put_line('     DISKGROUP       DISKNUMBER AU STATUS   AU COUNT  ');
   	  DBMS_OUTPUT.put_line('-------------------- ---------- --------- ------------');
 
 	  if (getops2 = '*') then
@@ -153,7 +190,7 @@ order by NUMBER_KFFXP, AU_KFFXP)
 
 LOOP
 
-dbms_output.put_line(lpad(asm_ext.GROUP_KFFXP, 11) || ' ' ||  rpad(asm_ext.DISK_KFFXP, 10)  || ' ' ||  rpad(asm_ext.NUMBER_KFFXP,10) || ' ' || rpad(asm_ext.XNUM_KFFXP,18) || rpad(asm_ext.extp,16) || ' ' || rpad(asm_ext.au_kffxp,20));
+dbms_output.put_line(lpad(asm_ext.GROUP_KFFXP, 11) || ' ' ||  rpad(asm_ext.DISK_KFFXP, 10)  || ' ' ||  rpad(asm_ext.NUMBER_KFFXP,10) || ' ' || rpad(asm_ext.XNUM_KFFXP,18) || ' ' ||rpad(asm_ext.extp,16) || ' ' || rpad(asm_ext.au_kffxp,20));
 
 
 END LOOP;
