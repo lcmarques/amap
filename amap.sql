@@ -9,7 +9,7 @@
 --  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._ 
 -- (.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)
 --  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' 
--- AMAP - ASM Mapping Utility v0.3
+-- AMAP - ASM Mapping Utility v0.3.1
 -- Author: Luis Marques (lcarapinha@gmail)
 -- Website: http://lcmarques.com
 -- Twitter: @drune
@@ -29,6 +29,7 @@ set linesize 9999
 
 
 declare
+
 getops   varchar2(50) := '';
 getops2  varchar(50) := '';
 
@@ -55,6 +56,9 @@ DECODE(ff.NUMBER_KFFXP, '1', 'FILE DIRECTORY',
 					  '6', 'ALIAS DIRECTORY',
 					  '9', 'ATTRIBUTE DIRECTORY',
 					  '12', 'STALENESS REGISTRY',
+					  '253', 'ASM SPFILE',
+					  '254', 'STALENESS REGISTRY',
+					  '255', 'OCR FILE ASM',
 					  'UNKNOW') META_DESC,
 DECODE(ff.LXN_KFFXP, '0', 'PRIMARY EXT', '1', '1st MIRROR EXT','2', '2nd MIRROR EXT') EXTP, 
 ff.AU_KFFXP
@@ -189,6 +193,7 @@ and GROUP_KFFXP=(select group_number from v$asm_alias where name=getops)
 order by NUMBER_KFFXP, AU_KFFXP)
 
 LOOP
+
 
 dbms_output.put_line(lpad(asm_ext.GROUP_KFFXP, 11) || ' ' ||  rpad(asm_ext.DISK_KFFXP, 10)  || ' ' ||  rpad(asm_ext.NUMBER_KFFXP,10) || ' ' || rpad(asm_ext.XNUM_KFFXP,18) || ' ' ||rpad(asm_ext.extp,16) || ' ' || rpad(asm_ext.au_kffxp,20));
 
